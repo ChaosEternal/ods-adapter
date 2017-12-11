@@ -79,7 +79,7 @@ def main():
         if n == "finish" or n == "error":
             break
         n, t = adp.workflow(n, t)
-        time.sleep(30)
+        time.sleep(3)
 
     n, t = adp.workflow("deploy", None)
     while True:
@@ -87,7 +87,7 @@ def main():
         if n == "finish" or n == "error":
             break
         n, t = adp.workflow(n, t)
-        time.sleep(30)
+        time.sleep(3)
     print(adp.get_creds())
 if __name__ == '__main__':
     main()
