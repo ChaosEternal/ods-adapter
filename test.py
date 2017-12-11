@@ -1,4 +1,4 @@
-import time
+import time, os
 import ods_adapter
 from bosh_api import *
 
@@ -66,12 +66,6 @@ stemcells:
   os: ubuntu-trusty
   version: "3468.5"
 """
-def wait(t):
-    while t.state != 'done':
-        time.sleep(1)
-        print(".", end="", flush=True)
-        t.update()
-    print("")
 
 def main():
     dname = "learn-bosh-2"
@@ -81,7 +75,7 @@ def main():
 
     n, t = adp.workflow("delete", None)
     while True:
-        print n, t
+        print( n, t)
         if n == "finish" or n == "error":
             break
         n, t = adp.workflow(n, t)
@@ -89,10 +83,11 @@ def main():
 
     n, t = adp.workflow("deploy", None)
     while True:
-        print n, t
+        print( n, t)
         if n == "finish" or n == "error":
             break
         n, t = adp.workflow(n, t)
         time.sleep(30)
+    print(adp.get_creds())
 if __name__ == '__main__':
     main()

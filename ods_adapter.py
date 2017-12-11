@@ -7,19 +7,26 @@ class OdsAdapter():
     _manifest = None
     _name = None
     _job = None
-    def __init__(self, name, env, job, must_alivejob = [], manifest=None, render_rules=[]):
+    def __init__(self, name, env, job, must_alivejob = [], manifest=None, render_rules=[], info_fetcher = {}):
         if not isinstance(env, BoshEnv):
             raise TypeError("%s.__init__(): env should be instance of BoshEnv"%self.__class__.__name__)
         self._name = name
         self._job = job
         self._render_rules = render_rules
+        self._env = env
         self._must_alivejob = must_alivejob
         self._def_workflow()
+        self._info_fetcher = info_fetcher
         if manifest is not None:
             self._manifest = yaml.load(manifest)
     def __repr__(self):
         return "<%s %s>"%(self.__class__.__name__, self._name)
-
+    def fetch_info(self):
+        m = self._env.deployment_by_name(self._name)
+        manifest = yaml.load(m.manifest)
+        r = [(key, [i.value for i in parse(path).find(manifest)])
+         for key, path in self._info_fetcher.items() ]
+        return r
     def get_creds(self):
         cred = {"credentials":
                 {"cluster":
@@ -42,7 +49,7 @@ class OdsAdapter():
             return "deploy_%s"%r, task_id
         if self._manifest is None:
             raise TypeError("%s.calldeploy: manifest is not specified"%self.__class__.__name__)
-        t = self._env.deploy(json.dumps(self._render_manifest()))
+        t = self._env.deploy(self._render_manifest())
         return self.calldeploy(t.id)
     def checktask(self, task_id):
         jobstatemap={"queued":"poolagain",
@@ -71,7 +78,12 @@ class OdsAdapter():
             if r == 'done':
                 return 'delete_done', None
             return 'delete_%s'%r, task_id
-        t = self._env.delete_deploy(self._name)
+        try:
+            t = self._env.delete_deploy(self._name)
+        except BoshRequestError as e:
+            if e.code == 404:
+                return "delete_done", None
+            raise e
         return self.calldelete(t.id)
     def _def_workflow(self):
         self._wf_def = {"deploy": self.calldeploy,
@@ -93,4 +105,4 @@ class OdsAdapter():
             return f(t)
         return f, None
     def workflow(self, pre, t):
-        self._workflow(pre, t)
+        return self._workflow(pre, t)
