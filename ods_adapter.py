@@ -52,9 +52,9 @@ class OdsAdapter():
         t = self._env.deploy(self._render_manifest())
         return self.calldeploy(t.id)
     def checktask(self, task_id):
-        jobstatemap={"queued":"poolagain",
-                      'processing':"poolagain",
-                      'cancelling':'poolagain',
+        jobstatemap={"queued":"pollagain",
+                      'processing':"pollagain",
+                      'cancelling':'pollagain',
                       'error': 'error'}
         t = self._env.task_by_id(task_id)
         return jobstatemap.get(t.state, 'done')
@@ -87,13 +87,13 @@ class OdsAdapter():
         return self.calldelete(t.id)
     def _def_workflow(self):
         self._wf_def = {"deploy": self.calldeploy,
-                        "deploy_poolagain": self.calldeploy,
+                        "deploy_pollagain": self.calldeploy,
                         "deploy_done": self.callinstancestates,
-                        "states_poolagain": self.callinstancestates,
+                        "states_pollagain": self.callinstancestates,
                         "states_done": self.checkstate,
                         "deploy_finish": "finish",
                         "delete": self.calldelete,
-                        "delete_poolagain": self.calldelete,
+                        "delete_pollagain": self.calldelete,
                         "delete_done": "finish",
                         "finish": "finish"
         }
