@@ -1,6 +1,6 @@
 from bosh_api import *
 import yaml, json
-from jsonpath_ng_ext import parse
+from jsonpath_ng.ext import parse
 
 class OdsAdapter():
     _env = None
@@ -86,13 +86,13 @@ class OdsAdapter():
             raise e
         return self.calldelete(t.id)
     def _def_workflow(self):
-        self._wf_def = {"deploy": self.calldeploy,
+        self._wf_def = {"deploy": "deploy_pollagain",
                         "deploy_pollagain": self.calldeploy,
-                        "deploy_done": self.callinstancestates,
+                        "deploy_done": "states_pollagain",
                         "states_pollagain": self.callinstancestates,
                         "states_done": self.checkstate,
                         "deploy_finish": "finish",
-                        "delete": self.calldelete,
+                        "delete": "delete_pollagain",
                         "delete_pollagain": self.calldelete,
                         "delete_done": "finish",
                         "finish": "finish"
@@ -100,9 +100,11 @@ class OdsAdapter():
     def _workflow(self, pre, t):
         if pre not in self._wf_def:
             return 'error', None
+        if pre in ('finish',):
+            return 'finish', None
         f = self._wf_def[pre]
         if callable(f):
             return f(t)
-        return f, None
+        return _workflow(f, t)
     def workflow(self, pre, t):
         return self._workflow(pre, t)
