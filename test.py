@@ -71,7 +71,7 @@ def main():
     dname = "learn-bosh-2"
     env=BoshEnv("192.168.50.6", os.getenv("BOSH_CLIENT"), os.getenv("BOSH_CLIENT_SECRET"),
                 cacert=os.getenv("BOSH_CA_CERT"))
-    adp = ods_adapter.OdsAdapter("learn-bosh-2", env, "app", ["app"], d, ["$.instance_groups[?name=app]..properties.password", "adadasdda"])
+    adp = ods_adapter.OdsAdapter("learn-bosh-2", env, "app", ["app"], d, [("$.instance_groups[?name=app]..properties.password", "adadasdda")], {"pass":"$.instance_groups[?name=app]..properties.password"})
     
     n, t = adp.workflow("delete", None)
     while True:
@@ -89,6 +89,6 @@ def main():
         n, t = adp.workflow(n, t)
         time.sleep(3)
     print(adp.get_creds())
-    print(adp.fetch_info({"pass","$.instance_groups[?name=app]..properties.password"}))
+    print(adp.fetch_info())
 if __name__ == '__main__':
     main()
