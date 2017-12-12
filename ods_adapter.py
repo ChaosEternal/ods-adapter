@@ -98,7 +98,7 @@ class OdsAdapter():
             return 'states_error', task_id
     def calldelete(self, task_id):
         if task_id is not None:
-            return self.checktask(task_id)
+            return self.checktask(task_id, "delete")
         try:
             t = self._env.delete_deploy(self._name)
         except BoshRequestError as e:
