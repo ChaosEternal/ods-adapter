@@ -78,7 +78,7 @@ class OdsAdapter():
                 return '%s_done'%step, None
             return "%s_%s"%(step, r), task_id
         t = self._env.runerrand(self._name, errand)
-        return self.runerrand(errand, step, t.id)
+        return self.run_errand(errand, step, t.id)
     def checktask(self, task_id):
         jobstatemap={"queued":"pollagain",
                       'processing':"pollagain",
