@@ -73,10 +73,11 @@ class SampleOdsAdapter(ods_adapter.OdsAdapter):
     _manifest = yaml.load(d)
     _job = 'app'
     _must_alivejob = ['app']
-    _render_manifest = [("$.instance_groups[?name=app]..properties.password", "adadasdda")]
-    _info_fetcher = {"password":"$.instance_groups[?name=app]..properties.password",
-                     "port":"$.instance_groups[?name=app]..properties.port"}
+    _render_rules = [("$.instance_groups[?name=app]..properties.password", "adadasdda")]
+    _info_fetcher = {"password":"$.instance_groups[?name=app]..jobs[?name=app].properties.password",
+                     "port":"$.instance_groups[?name=app]..jobs[?name=app].properties.port"}
     def __init__(self, deploy_id, env):
+        self._env = env
         name_in_manifest = parse("$.name").find(self._manifest)[0].value
         base_name, rest = name_in_manifest.rsplit("-",1)
         self._name = "%s-%s"%(base_name, deploy_id)
@@ -89,7 +90,7 @@ class SampleOdsAdapter(ods_adapter.OdsAdapter):
                 {"cluster":
                  [{"host": i.ips, "port": info["port"][0]}
                   for i in self._env.instances(self._name)
-                     if i.job == self._job]
+                     if i.job == self._job],
                  "password": str(info["password"][0])
                 }
         }
