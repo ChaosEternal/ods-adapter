@@ -79,7 +79,7 @@ class OdsAdapter():
                       'cancelling':'pollagain',
                       'error': 'error'}
         t = self._env.task_by_id(task_id)
-        return "step_%s"%jobstatemap.get(t.state, 'done'), task_id
+        return "%s_%s"%(step, jobstatemap.get(t.state, 'done')), task_id
     def callinstancestates(self, task_id):
         if task_id is not None:
             r, t = self.checktask(task_id, "states")
