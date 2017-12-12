@@ -98,20 +98,12 @@ class SampleOdsAdapter(ods_adapter.OdsAdapter):
     def callerrand(self, task_id):
         return self.runerrand('app', 'errand0', task_id)
     def _def_workflow(self):
-        self._wf_def = {"deploy": "deploy_pollagain",
-                        "deploy_pollagain": self.calldeploy,
-                        "deploy_done": "states_pollagain",
-                        "states_pollagain": self.callinstancestates,
-                        "states_done": self.checkstate,
-                        "deploy_finish": "errand0",
-                        "errand0": "errand0_pollagain",
-                        "errand0_pollagain": self.callerrand,
-                        "errand0_done": "finish",
-                        "delete": "delete_pollagain",
-                        "delete_pollagain": self.calldelete,
-                        "delete_done": "finish",
-                        "finish": "finish"
-        }
+        super()._def_workflow()
+        self._insert_workflow("deploy_finish", {"deploy_finish": "errand0",
+                                                "errand0": "errand0_pollagain",
+                                                "errand0_pollagain": self.callerrand,
+                                                "errand0_done": "finish"}
+                              )
 
         
 def main():

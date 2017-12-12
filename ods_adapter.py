@@ -63,33 +63,29 @@ class OdsAdapter():
         return json.dumps(init)
     def calldeploy(self, task_id = None):
         if task_id is not None:
-            r = self.checktask(task_id)
-            if r == 'done':
-                return 'deploy_done', None
-            return "deploy_%s"%r, task_id
+            return self.checktask(task_id, "deploy")
         if self._manifest is None:
             raise TypeError("%s.calldeploy: manifest is not specified"%self.__class__.__name__)
         t = self._env.deploy(self._render_manifest())
         return self.calldeploy(t.id)
     def runerrand(self, errand, step, task_id = None):
         if task_id is not None:
-            r = self.checktask(task_id)
-            if r == 'done':
-                return '%s_done'%step, None
-            return "%s_%s"%(step, r), task_id
+            return self.checktask(task_id, step)
         t = self._env.run_errand(self._name, errand)
         return self.runerrand(errand, step, t.id)
-    def checktask(self, task_id):
+    def checktask(self, task_id, step):
         jobstatemap={"queued":"pollagain",
                       'processing':"pollagain",
                       'cancelling':'pollagain',
                       'error': 'error'}
         t = self._env.task_by_id(task_id)
-        return jobstatemap.get(t.state, 'done')
+        return "step_%s"%jobstatemap.get(t.state, 'done'), task_id
     def callinstancestates(self, task_id):
         if task_id is not None:
-            r = self.checktask(task_id)
-            return "states_%s"%r, task_id
+            r, t = self.checktask(task_id, "states")
+            if r == "states_done":
+                return self.checkstate(task_id)
+            return r,t
         t = self._env.instance_states(self._name)
         return self.callinstancestates(t.id)
     def checkstate(self, task_id):
@@ -97,15 +93,12 @@ class OdsAdapter():
         t.set_result_class(BoshInstanceState)
         res = t.result()
         if all(i.job_state == 'running' for i in res if i.job_name in self._must_alivejob):
-            return 'deploy_finish',task_id
+            return 'states_done',task_id
         else:
-            return 'deploy_error', task_id
+            return 'states_error', task_id
     def calldelete(self, task_id):
         if task_id is not None:
-            r = self.checktask(task_id)
-            if r == 'done':
-                return 'delete_done', None
-            return 'delete_%s'%r, task_id
+            return self.checktask(task_id)
         try:
             t = self._env.delete_deploy(self._name)
         except BoshRequestError as e:
@@ -118,13 +111,23 @@ class OdsAdapter():
                         "deploy_pollagain": self.calldeploy,
                         "deploy_done": "states_pollagain",
                         "states_pollagain": self.callinstancestates,
-                        "states_done": self.checkstate,
+                        "states_done": "deploy_finish",
                         "deploy_finish": "finish",
                         "delete": "delete_pollagain",
                         "delete_pollagain": self.calldelete,
                         "delete_done": "finish",
                         "finish": "finish"
         }
+    def _insert_workflow(self, after, wf):
+        if after not in self._wf_def or after not in self.wf:
+            raise TypeError("_insert_workflow: %s must exists in both `_wf_def' and `wf'"%after)
+        end = self._wf_def[after]
+        if not isinstance(end):
+            raise TypeError("_insert_workflow: right side of %s is not symbol, stop!"%after)
+        if not end in wf.values():
+            raise TypeError("_insert_workflow: %s does not exists in `wf'"%end)
+        for k,v in wf.items():
+            self._wf_def[k] = v
     def _workflow(self, pre, t):
         if pre not in self._wf_def:
             return 'error', None
