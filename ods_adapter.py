@@ -7,6 +7,10 @@ class OdsAdapter():
     _manifest = None
     _name = None
     _job = None
+    _must_alivejob = None
+    _render_manifest = None
+    _info_fetcher = None
+    _wf_def = None
     def __init__(self, name, env, job, must_alivejob = [], manifest=None, render_rules=[], info_fetcher = {}):
         if not isinstance(env, BoshEnv):
             raise TypeError("%s.__init__(): env should be instance of BoshEnv"%self.__class__.__name__)
@@ -19,6 +23,22 @@ class OdsAdapter():
         self._info_fetcher = info_fetcher
         if manifest is not None:
             self._manifest = yaml.load(manifest)
+        self._validate()
+    def _validate(self):
+        checkers = [("_name", str),
+                    ("_env", BoshEnv),
+                    ("_job", str),
+                    ("_must_alivejob", list),
+                    ("_manifest", dict),
+                    ("_render_rules", list),
+                    ("_info_fetcher", dict),
+                    ("_wf_def", dict)]
+        failed = [(k, t) for k, t in checkers
+                  if not isinstance(getattr(self, k), t)]
+        if len(failed) > 0:
+            err = ["%s should be instance of %s"%(k, str(t)) for k,t in failed]
+            errstr = "\n".join(err)
+            raise TypeError("%s.__init__(): %s"%(self.__class__.__name__, errstr))
     def __repr__(self):
         return "<%s %s>"%(self.__class__.__name__, self._name)
     def fetch_info(self):
@@ -105,6 +125,6 @@ class OdsAdapter():
         f = self._wf_def[pre]
         if callable(f):
             return f(t)
-        return _workflow(f, t)
+        return self._workflow(f, t)
     def workflow(self, pre, t):
         return self._workflow(pre, t)

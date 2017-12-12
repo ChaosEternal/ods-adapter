@@ -1,6 +1,8 @@
 import time, os
 import ods_adapter
 from bosh_api import *
+import yaml
+from jsonpath_ng.ext import parse
 
 d = """---
 name: learn-bosh-2
@@ -67,11 +69,37 @@ stemcells:
   version: "3468.5"
 """
 
+class SampleOdsAdapter(ods_adapter.OdsAdapter):
+    _manifest = yaml.load(d)
+    _job = 'app'
+    _must_alivejob = ['app']
+    _render_manifest = [("$.instance_groups[?name=app]..properties.password", "adadasdda")]
+    _info_fetcher = {"password":"$.instance_groups[?name=app]..properties.password",
+                     "port":"$.instance_groups[?name=app]..properties.port"}
+    def __init__(self, deploy_id, env):
+        name_in_manifest = parse("$.name").find(self._manifest)[0].value
+        base_name, rest = name_in_manifest.rsplit("-",1)
+        self._name = "%s-%s"%(base_name, deploy_id)
+        discard = parse("$.name").update(self._manifest, self._name)
+        self._def_workflow()
+        self._validate()
+    def get_creds(self):
+        info = self.fetch_info()
+        cred = {"credentials":
+                {"cluster":
+                 [{"host": i.ips, "port": info["port"][0]}
+                  for i in self._env.instances(self._name)
+                     if i.job == self._job]
+                 "password": str(info["password"][0])
+                }
+        }
+        return cred
+
 def main():
     dname = "learn-bosh-2"
     env=BoshEnv("192.168.50.6", os.getenv("BOSH_CLIENT"), os.getenv("BOSH_CLIENT_SECRET"),
                 cacert=os.getenv("BOSH_CA_CERT"))
-    adp = ods_adapter.OdsAdapter("learn-bosh-2", env, "app", ["app"], d, [("$.instance_groups[?name=app]..properties.password", "adadasdda")], {"pass":"$.instance_groups[?name=app]..properties.password"})
+    adp = SampleOdsAdapter("a1231312", env)
     
     n, t = adp.workflow("delete", None)
     while True:
