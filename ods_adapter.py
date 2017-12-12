@@ -119,10 +119,10 @@ class OdsAdapter():
                         "finish": "finish"
         }
     def _insert_workflow(self, after, wf):
-        if after not in self._wf_def or after not in self.wf:
+        if after not in self._wf_def or after not in wf:
             raise TypeError("_insert_workflow: %s must exists in both `_wf_def' and `wf'"%after)
         end = self._wf_def[after]
-        if not isinstance(end):
+        if not isinstance(end, str):
             raise TypeError("_insert_workflow: right side of %s is not symbol, stop!"%after)
         if not end in wf.values():
             raise TypeError("_insert_workflow: %s does not exists in `wf'"%end)
