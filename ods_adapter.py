@@ -133,6 +133,6 @@ class OdsAdapter():
         f = self._wf_def[pre]
         if callable(f):
             return f(t)
-        return self._workflow(f, t)
+        return self._workflow(f, None)
     def workflow(self, pre, t):
         return self._workflow(pre, t)
