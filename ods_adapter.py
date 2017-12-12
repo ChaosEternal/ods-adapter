@@ -1,6 +1,6 @@
 from bosh_api import *
 import yaml, json
-from jsonpath_ng import jsonpath, parse
+from jsonpath_ng_ext import parse
 
 class OdsAdapter():
     _env = None
@@ -24,8 +24,8 @@ class OdsAdapter():
     def fetch_info(self):
         m = self._env.deployment_by_name(self._name)
         manifest = yaml.load(m.manifest)
-        r = [(key, [i.value for i in parse(path).find(manifest)])
-         for key, path in self._info_fetcher.items() ]
+        r = dict([(key, [i.value for i in parse(path).find(manifest)])
+         for key, path in self._info_fetcher.items() ])
         return r
     def get_creds(self):
         cred = {"credentials":
