@@ -65,12 +65,20 @@ class OdsAdapter():
         if task_id is not None:
             r = self.checktask(task_id)
             if r == 'done':
-                return 'deploy_%s'%r, None
+                return 'deploy_done', None
             return "deploy_%s"%r, task_id
         if self._manifest is None:
             raise TypeError("%s.calldeploy: manifest is not specified"%self.__class__.__name__)
         t = self._env.deploy(self._render_manifest())
         return self.calldeploy(t.id)
+    def runerrand(self, errand, step, task_id = None):
+        if task_id is not None:
+            r = self.checktask(task_id)
+            if r == 'done':
+                return '%s_done'%step, None
+            return "%s_%s"%(step, r), task_id
+        t = self._env.runerrand(self._name, errand)
+        return self.runerrand(errand, step, t.id)
     def checktask(self, task_id):
         jobstatemap={"queued":"pollagain",
                       'processing':"pollagain",
