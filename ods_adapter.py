@@ -16,6 +16,7 @@ class OdsAdapter():
         if not isinstance(env, BoshEnv):
             raise TypeError("%s.__init__(): env should be instance of BoshEnv"%self.__class__.__name__)
         self._name = "%s-%s"%(self._dname, id)
+        self._env = env
         if self._wf_def is None:
             self._def_workflow()
         self.gen_manifest()
