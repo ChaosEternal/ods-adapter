@@ -12,6 +12,7 @@ class OdsAdapter():
     _render_manifest = []
     _info_fetcher = {}
     _wf_def = None
+    
     def __init__(self, id, env):
         if not isinstance(env, BoshEnv):
             raise TypeError("%s.__init__(): env should be instance of BoshEnv"%self.__class__.__name__)
@@ -56,10 +57,18 @@ class OdsAdapter():
                 }
         }
         return cred
+    @staticmethod
+    def password_generator(k):
+        import string, random
+        p = lambda: "".join(random.choices(string.ascii_letters+string.digits, k=k))
+        return p
     def _render_manifest(self):
         init = self._manifest
         for p, v in self._render_rules:
-            init = parse(p).update(init, v)
+            if callable(v):
+                init = parse(p).update(init, v())
+            else:
+                init = parse(p).update(init, v)
         return json.dumps(init)
     def calldeploy(self, task_id = None):
         if task_id is not None:

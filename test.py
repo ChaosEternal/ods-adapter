@@ -9,7 +9,7 @@ class SampleOdsAdapter(ods_adapter.OdsAdapter):
     _job = 'app'
     _dname = "learn-bosh"
     _must_alivejob = ['app']
-    _render_rules = [("$.instance_groups[?name=app]..properties.password", "adadasdda")]
+    _render_rules = [("$.instance_groups[?name=app]..properties.password", ods_adapter.OdsAdapter.password_generator(12))]
     _info_fetcher = {"password":"$.instance_groups[?name=app]..jobs[?name=app].properties.password",
                      "port":"$.instance_groups[?name=app]..jobs[?name=app].properties.port"}
     def gen_manifest(self):
