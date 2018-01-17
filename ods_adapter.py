@@ -6,26 +6,25 @@ class OdsAdapter():
     _env = None
     _manifest = None
     _name = None
+    _dname = None
     _job = None
-    _must_alivejob = None
-    _render_manifest = None
-    _info_fetcher = None
+    _must_alivejob = []
+    _render_manifest = []
+    _info_fetcher = {}
     _wf_def = None
-    def __init__(self, name, env, job, must_alivejob = [], manifest=None, render_rules=[], info_fetcher = {}):
+    def __init__(self, id, env):
         if not isinstance(env, BoshEnv):
             raise TypeError("%s.__init__(): env should be instance of BoshEnv"%self.__class__.__name__)
-        self._name = name
-        self._job = job
-        self._render_rules = render_rules
-        self._env = env
-        self._must_alivejob = must_alivejob
-        self._def_workflow()
-        self._info_fetcher = info_fetcher
-        if manifest is not None:
-            self._manifest = yaml.load(manifest)
+        self._name = "%s-%s"%(self._dname, id)
+        if self._wf_def is None:
+            self._def_workflow()
+        self.gen_manifest()
         self._validate()
+    def gen_manifest(self):
+        discard = parse("$.name").update(self._manifest, self._name)
     def _validate(self):
         checkers = [("_name", str),
+                    ("_dname", str),
                     ("_env", BoshEnv),
                     ("_job", str),
                     ("_must_alivejob", list),
