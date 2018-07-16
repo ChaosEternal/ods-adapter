@@ -1,6 +1,8 @@
 from bosh_api import *
 import yaml, json
 from jsonpath_ng.ext import parse
+import os
+import os.path
 
 class OdsAdapter():
     _env = None
@@ -21,12 +23,29 @@ class OdsAdapter():
                  ("_render_rules"  , list),
                  ("_info_fetcher"  , dict),
                  ("_wf_def"        , dict)]
-    
-    def __init__(self, id, env):
+
+    def _get_bosh_env(self, config):
+        if config is not None and "BOSH" in config:
+            return config["BOSH"]
+        bosh_env_ip          = os.getenv("BOSH_ENVIRONMENT")
+        bosh_client          = os.getenv("BOSH_CLIENT")
+        bosh_client_secret   = os.getenv("BOSH_CLIENT_SECRET")
+        _e_bosh_cacert       = os.getenv("BOSH_CA_CERT")
+        if os.path.exists(_e_bosh_cacert):
+            bosh_cacert      = _e_bosh_cacert
+        else:
+            import tempfile
+            _f , bosh_cacert = tempfile.mkstemp(".cert", "bosh_ca_", "/tmp/")
+            _fp              = os.fdopen(_f, "w")
+            _fp.write(_e_bosh_cacert)
+            _fp.close()
+        return BoshEnv(bosh_env_ip, bosh_client, bosh_client_secret, cacert=bosh_cacert)
+
+    def __init__(self, id, config=None):
         if not isinstance(env, BoshEnv):
             raise TypeError("%s.__init__(): env should be instance of BoshEnv"%self.__class__.__name__)
         self._name = "%s-%s"%(self._dname, id)
-        self._env = env
+        self._env = self._get_bosh_env(config)
         if self._wf_def is None:
             self._def_workflow()
         self.gen_manifest()
