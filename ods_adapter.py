@@ -1,4 +1,3 @@
-from bosh_api import *
 import yaml, json
 from jsonpath_ng.ext import parse
 import os
@@ -16,7 +15,6 @@ class OdsAdapter():
     _wf_def = None
     _checkers = [("_name"          , str),
                  ("_dname"         , str),
-                 ("_env"           , BoshEnv),
                  ("_job"           , str),
                  ("_must_alivejob" , list),
                  ("_manifest"      , dict),
@@ -25,8 +23,11 @@ class OdsAdapter():
                  ("_wf_def"        , dict)]
 
     def _get_bosh_env(self, config):
+        from bosh_api import *
         if config is not None and "BOSH" in config:
-            return config["BOSH"]
+            env = config["BOSH"]
+            if isinstance(env, BoshEnv):
+                return env
         bosh_env_ip          = os.getenv("BOSH_ENVIRONMENT")
         bosh_client          = os.getenv("BOSH_CLIENT")
         bosh_client_secret   = os.getenv("BOSH_CLIENT_SECRET")
@@ -42,8 +43,6 @@ class OdsAdapter():
         return BoshEnv(bosh_env_ip, bosh_client, bosh_client_secret, cacert=bosh_cacert)
 
     def __init__(self, id, config=None):
-        if not isinstance(env, BoshEnv):
-            raise TypeError("%s.__init__(): env should be instance of BoshEnv"%self.__class__.__name__)
         self._name = "%s-%s"%(self._dname, id)
         self._env = self._get_bosh_env(config)
         if self._wf_def is None:
