@@ -12,6 +12,15 @@ class OdsAdapter():
     _render_manifest = []
     _info_fetcher = {}
     _wf_def = None
+    _checkers = [("_name"          , str),
+                 ("_dname"         , str),
+                 ("_env"           , BoshEnv),
+                 ("_job"           , str),
+                 ("_must_alivejob" , list),
+                 ("_manifest"      , dict),
+                 ("_render_rules"  , list),
+                 ("_info_fetcher"  , dict),
+                 ("_wf_def"        , dict)]
     
     def __init__(self, id, env):
         if not isinstance(env, BoshEnv):
@@ -21,19 +30,10 @@ class OdsAdapter():
         if self._wf_def is None:
             self._def_workflow()
         self.gen_manifest()
-        self._validate()
+        self._validate(self._checkers)
     def gen_manifest(self):
         discard = parse("$.name").update(self._manifest, self._name)
-    def _validate(self):
-        checkers = [("_name", str),
-                    ("_dname", str),
-                    ("_env", BoshEnv),
-                    ("_job", str),
-                    ("_must_alivejob", list),
-                    ("_manifest", dict),
-                    ("_render_rules", list),
-                    ("_info_fetcher", dict),
-                    ("_wf_def", dict)]
+    def _validate(self, checkers):
         failed = [(k, t) for k, t in checkers
                   if not isinstance(getattr(self, k), t)]
         if len(failed) > 0:
